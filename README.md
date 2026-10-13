@@ -5,11 +5,9 @@ And some features are going to be added\
 # Fixed Bugs
 App won't freeze anymore when extracting.
 
-
-
 # New Features
+Combining multiple PKGs
 
 ## Progress Bar
 To check on your progress ;)
 ![image](https://user-images.githubusercontent.com/64313946/216185426-a96a37b8-6cc8-4f6d-ace0-5c0063de2f95.png)
-
