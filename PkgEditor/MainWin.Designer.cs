@@ -166,7 +166,7 @@
       // 
       this.combinePKGPartsToolStripMenuItem.Name = "combinePKGPartsToolStripMenuItem";
       this.combinePKGPartsToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
-      this.combinePKGPartsToolStripMenuItem.Text = "Combine PKG parts";
+      this.combinePKGPartsToolStripMenuItem.Text = "Combine PKGs";
       this.combinePKGPartsToolStripMenuItem.Click += new System.EventHandler(this.CombinePKGPartsToolStripMenuItem_Click);
       // 
       // cryptoDebuggerToolStripMenuItem

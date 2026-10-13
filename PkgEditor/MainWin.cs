@@ -191,73 +191,46 @@ namespace PkgEditor
 
     private async void CombinePKGPartsToolStripMenuItem_Click(object sender, EventArgs e)
     {
-      using (var ofd = new OpenFileDialog() { Title = "Select part 0", Filter = "PKG Files (*_0.pkg)|*_0.pkg" })
+      using (var ofd = new OpenFileDialog() { Title = "Select PKG parts to combine", Filter = "PKG Files (*.pkg)|*.pkg", Multiselect = true })
       {
-        if (ofd.ShowDialog() != DialogResult.OK)
+        if (ofd.ShowDialog() != DialogResult.OK || ofd.FileNames.Length < 2)
           return;
 
-        var filenames = new List<string>();
-        filenames.Add(ofd.FileName);
+        var filenames = ofd.FileNames.OrderBy(f => f).ToList();
         ulong pkgSize = 0;
-        long remainingSize = 0;
         using (var s = File.OpenRead(filenames[0]))
         {
           var hdr = new LibOrbisPkg.PKG.PkgReader(s).ReadHeader();
           pkgSize = hdr.package_size;
-          remainingSize = (long)hdr.package_size - s.Length;
-        }
-        if(remainingSize <= 0)
-        {
-          MessageBox.Show("Error: reported package size was less than part file size");
-          return;
         }
 
-        // remove the _0.pkg (6 characters) from the filename
-        var baseFilename = filenames[0].Substring(0, filenames[0].Length - 6);
-        var targetFilename = baseFilename + ".pkg";
         using (var sfd = new SaveFileDialog()
         {
           Title = "Select output file",
           Filter = "PKG Files (*.pkg)|*.pkg",
-          FileName = targetFilename
+          FileName = Path.GetFileNameWithoutExtension(filenames[0]) + ".pkg"
         })
         {
           if (sfd.ShowDialog() != DialogResult.OK)
             return;
-          targetFilename = sfd.FileName;
-        }
-        var i = 0;
-        while (remainingSize > 0)
-        {
-          var newFile = $"{baseFilename}_{++i}.pkg";
-          if (File.Exists(newFile))
-          {
-            filenames.Add(newFile);
-            remainingSize -= new FileInfo(newFile).Length;
-          }
-          else
-          {
-            MessageBox.Show($"Error: missing part {i}, should be {remainingSize} bytes.");
-            return;
-          }
-        }
 
-        using (var logWindow = new LogWindow())
-        using (var fo = File.Create(targetFilename))
-        {
-          fo.SetLength((long)pkgSize);
-          logWindow.StartPosition = this.StartPosition;
-          logWindow.Show(this);
-          logWindow.GetWriter().WriteLine($"Merging files to {targetFilename}...");
-          foreach (var fn in filenames)
+          using (var logWindow = new LogWindow())
+          using (var fo = File.Create(sfd.FileName))
           {
-            using (var fi = File.OpenRead(fn))
+            fo.SetLength((long)pkgSize);
+            logWindow.StartPosition = this.StartPosition;
+            logWindow.Show(this);
+            logWindow.GetWriter().WriteLine($"Merging {filenames.Count} files to {sfd.FileName}...");
+            foreach (var fn in filenames)
             {
-              logWindow.GetWriter().WriteLine($"Copying {fn}");
-              await fi.CopyToAsync(fo);
+              using (var fi = File.OpenRead(fn))
+              {
+                logWindow.GetWriter().WriteLine($"Copying {Path.GetFileName(fn)}");
+                await fi.CopyToAsync(fo);
+              }
             }
+            logWindow.GetWriter().WriteLine("Done. Saved to " + sfd.FileName);
           }
-          logWindow.GetWriter().WriteLine("Done. Saved to "+targetFilename);
         }
       }
     }
